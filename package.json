@@ -1,0 +1,36 @@
+{
+  "name": "gulp-qiniu",
+  "version": "0.0.1",
+  "description": "Gulp task for deploying files to qiniu CDN",
+  "author": "hfcorriez <hfcorriez@gmail.com>",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/hfcorriez/gulp-qiniu/blob/master/LICENSE"
+    }
+  ],
+  "keywords": [
+    "gulpplugin",
+    "gulp",
+    "qiniu",
+    "cdn"
+  ],
+  "homepage": "http://github.com/hfcorriez/gulp-qiniu",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hfcorriez/gulp-qiniu.git"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {
+    "through2": "~0.4.0",
+    "gulp-util": "~2.2.9",
+    "qn": "~0.2.2",
+    "moment": "~2.7.0",
+    "q": "~1.0.1"
+  },
+  "devDependencies": {
+    "gulp": "*"
+  }
+}
