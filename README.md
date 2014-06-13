@@ -20,7 +20,7 @@ gulp.src('./public/**')
     bucket: "bucket",
     private: false
   }, {
-    prefix: 'assets/',
+    dir: 'assets/',
     versioning: true,
     versionFile: './cdn.json'
   }))

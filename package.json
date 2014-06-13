@@ -31,6 +31,5 @@
     "q": "~1.0.1"
   },
   "devDependencies": {
-    "gulp": "*"
   }
 }

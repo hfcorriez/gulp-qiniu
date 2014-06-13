@@ -7,15 +7,17 @@ var QN = require('qn');
 var Moment = require('moment');
 var fs = require('fs');
 var Q = require('q');
+var util = require('util')
 
 module.exports = function (qiniu, option) {
   option = option || {};
+  option = extend({dir: '', versioning: false, versionFile: null}, option);
 
   var qn = QN.create(qiniu)
     , version = Moment().format('YYMMDDHHmm')
     , filesTotal = 0
     , filesSuccessTotal = 0
-    , qs = []
+    , qs = [];
 
   return through2.obj(function (file, enc, next) {
     var that = this;
@@ -23,7 +25,7 @@ module.exports = function (qiniu, option) {
     filesTotal++;
 
     var filePath = path.relative(file.base, file.path);
-    var fileKey = option.prefix + (option.prefix[option.prefix.length - 1] === '/' ? '' : '/') + (option.versioning ? version + '/' : '') + filePath;
+    var fileKey = option.dir + (option.dir[option.dir.length - 1] === '/' ? '' : '/') + (option.versioning ? version + '/' : '') + filePath;
 
     qs.push(Q.nbind(qn.upload, qn)(file._contents, {key: fileKey})
       .then(function () {
@@ -49,4 +51,16 @@ module.exports = function (qiniu, option) {
         log('Failed upload files:', err.message);
       });
   });
+
+  function extend (target, source) {
+    target = target || {};
+    for (var prop in source) {
+      if (typeof source[prop] === 'object') {
+        target[prop] = extend(target[prop], source[prop]);
+      } else {
+        target[prop] = source[prop];
+      }
+    }
+    return target;
+  }
 };
