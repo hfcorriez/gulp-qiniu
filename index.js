@@ -27,6 +27,8 @@ module.exports = function (qiniu, option) {
     qs.push(Q.nbind(qn.delete, qn)(fileKey)
       .then(function () {
         return Q.nbind(qn.upload, qn)(file._contents, {key: fileKey})
+      }, function () {
+        return Q.nbind(qn.upload, qn)(file._contents, {key: fileKey})
       })
       .then(function () {
         log('Uploaded', colors.green(filePath), '→', colors.green(fileKey));
