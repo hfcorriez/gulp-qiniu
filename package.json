@@ -1,6 +1,6 @@
 {
   "name": "gulp-qiniu",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Gulp task for deploying files to qiniu CDN",
   "author": "hfcorriez <hfcorriez@gmail.com>",
   "licenses": [
@@ -24,12 +24,11 @@
     "node": "*"
   },
   "dependencies": {
-    "through2": "~0.4.0",
     "gulp-util": "~2.2.9",
-    "qn": "~0.2.2",
     "moment": "~2.7.0",
-    "q": "~1.0.1"
+    "q": "~1.0.1",
+    "qn": "~0.2.2",
+    "through2": "~0.4.0"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
