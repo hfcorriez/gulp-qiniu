@@ -97,7 +97,7 @@ module.exports = function (qiniu, option) {
    * @returns {*}
    */
   function calcHash(file) {
-    if (file.size > 4096) return false;
+    if (file.size > 1 << 22) return false;
     var shasum = crypto.createHash('sha1');
     shasum.update(file._contents);
     var sha1 = shasum.digest();
