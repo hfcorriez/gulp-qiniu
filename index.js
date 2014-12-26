@@ -13,7 +13,7 @@ var uploadedFiles = 0;
 
 module.exports = function (qiniu, option) {
   option = option || {};
-  option = extend({dir: '', versioning: false, versionFile: null}, option);
+  option = extend({dir: '', versioning: false, versionFile: null, ignore:['.html']}, option);
 
   var qn = QN.create(qiniu)
     , version = Moment().format('YYMMDDHHmm')
@@ -22,6 +22,7 @@ module.exports = function (qiniu, option) {
   return through2.obj(function (file, enc, next) {
     var that = this;
     if (file._contents === null) return next();
+    if (option.ignore.indexOf(path.extname(file.path)) > -1) return next();
 
     var filePath = path.relative(file.base, file.path);
     var fileKey = option.dir + ((!option.dir || option.dir[option.dir.length - 1]) === '/' ? '' : '/') + (option.versioning ? version + '/' : '') + filePath;
