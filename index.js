@@ -23,13 +23,14 @@ module.exports = function (qiniu, option) {
   return through2.obj(function (file, enc, next) {
     var that = this;
     var isIgnore = false;
+    var filePath = path.relative(file.base, file.path);
+
     if (file._contents === null) return next();
     option.ignore.forEach(function(item) {
-      if (minimatch(file.path, item)) isIgnore = true;
+      if (minimatch(filePath, item)) isIgnore = true;
     })
     if (isIgnore) return next();
 
-    var filePath = path.relative(file.base, file.path);
     var fileKey = option.dir + ((!option.dir || option.dir[option.dir.length - 1]) === '/' ? '' : '/') + (option.versioning ? version + '/' : '') + filePath;
     var fileHash = calcHash(file);
 
