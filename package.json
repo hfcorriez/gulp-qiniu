@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "gulp-util": "~2.2.9",
+    "minimatch": "^2.0.4",
     "moment": "~2.7.0",
     "q": "~1.0.1",
     "qn": "~0.2.2",
