@@ -111,6 +111,6 @@ module.exports = function (qiniu, option) {
     var hash = new Buffer(1 + sha1.length);
     hash[0] = 0x16;
     sha1.copy(hash, 1);
-    return hash.toString('base64').replace(/+/g, '-').replace(/-/g, '_');
+    return hash.toString('base64').replace(/+/g, '-').replace(/\//g, '_');
   }
 };
