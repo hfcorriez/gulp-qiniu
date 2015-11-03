@@ -11,6 +11,7 @@ var util = require('util')
 var crypto = require('crypto')
 var minimatch = require('minimatch')
 var uploadedFiles = 0;
+var getEtag = require('getEtag');
 
 module.exports = function (qiniu, option) {
   option = option || {};
@@ -33,40 +34,42 @@ module.exports = function (qiniu, option) {
 
     var fileKey = option.dir + ((!option.dir || option.dir[option.dir.length - 1]) === '/' ? '' : '/') + (option.versioning ? version + '/' : '') + filePath;
     var fileHash = calcHash(file);
+    getEtag(file, function (fileHash) {
+      qs.push(Q.nbind(qn.stat, qn)(fileKey)
+        .spread(function (stat) {
+          // Skip when hash equal
+          if (stat.hash === fileHash) return false;
 
-    qs.push(Q.nbind(qn.stat, qn)(fileKey)
-      .spread(function (stat) {
-        // Skip when hash equal
-        if (stat.hash === fileHash) return false;
+          // Then delete
+          return Q.nbind(qn.delete, qn)(fileKey)
+        }, function () {
+          // Upload when not exists
+          return true;
+        })
+        .then(function (isUpload) {
+          if (isUpload === false) return false;
+          return Q.nbind(qn.upload, qn)(file._contents, {key: fileKey})
+        })
+        .then(function (stat) {
+          // No upload
+          if (stat === false) {
+            log('Skip:', colors.grey(filePath));
+            return;
+          }
 
-        // Then delete
-        return Q.nbind(qn.delete, qn)(fileKey)
-      }, function () {
-        // Upload when not exists
-        return true;
-      })
-      .then(function (isUpload) {
-        if (isUpload === false) return false;
-        return Q.nbind(qn.upload, qn)(file._contents, {key: fileKey})
-      })
-      .then(function (stat) {
-        // No upload
-        if (stat === false) {
-          log('Skip:', colors.grey(filePath));
-          return;
-        }
+          // Record hash
+          uploadedFiles++;
 
-        // Record hash
-        uploadedFiles++;
+          log('Upload:', colors.green(filePath), '→', colors.green(fileKey));
+        }, function (err) {
+          log('Error', colors.red(filePath), new PluginError('gulp-qiniu', err).message);
+          that.emit('Error', colors.red(filePath), new PluginError('gulp-qiniu', err));
+        })
+      )
 
-        log('Upload:', colors.green(filePath), '→', colors.green(fileKey));
-      }, function (err) {
-        log('Error', colors.red(filePath), new PluginError('gulp-qiniu', err).message);
-        that.emit('Error', colors.red(filePath), new PluginError('gulp-qiniu', err));
-      })
-    )
-
-    next();
+      next();   
+    });
+    
   }, function () {
     Q.all(qs)
       .then(function (rets) {
@@ -95,22 +98,5 @@ module.exports = function (qiniu, option) {
       }
     }
     return target;
-  }
-
-  /**
-   * Calc qiniu etag
-   *
-   * @param file
-   * @returns {*}
-   */
-  function calcHash(file) {
-    if (file.size > 1 << 22) return false;
-    var shasum = crypto.createHash('sha1');
-    shasum.update(file._contents);
-    var sha1 = shasum.digest();
-    var hash = new Buffer(1 + sha1.length);
-    hash[0] = 0x16;
-    sha1.copy(hash, 1);
-    return hash.toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
   }
 };
