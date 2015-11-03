@@ -11,7 +11,7 @@ var util = require('util')
 var crypto = require('crypto')
 var minimatch = require('minimatch')
 var uploadedFiles = 0;
-var getEtag = require('getEtag');
+var getEtag = require('./qetag');
 
 module.exports = function (qiniu, option) {
   option = option || {};
@@ -33,8 +33,7 @@ module.exports = function (qiniu, option) {
     if (isIgnore) return next();
 
     var fileKey = option.dir + ((!option.dir || option.dir[option.dir.length - 1]) === '/' ? '' : '/') + (option.versioning ? version + '/' : '') + filePath;
-    var fileHash = calcHash(file);
-    getEtag(file, function (fileHash) {
+    getEtag(file.path, function (fileHash) {
       qs.push(Q.nbind(qn.stat, qn)(fileKey)
         .spread(function (stat) {
           // Skip when hash equal
