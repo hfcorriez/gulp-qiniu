@@ -28,7 +28,7 @@
     "minimatch": "^2.0.4",
     "moment": "~2.7.0",
     "q": "~1.0.1",
-    "qn": "~0.2.2",
+    "qn": "^1.1.1",
     "through2": "~0.4.0"
   },
   "devDependencies": {}

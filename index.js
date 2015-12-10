@@ -7,18 +7,18 @@ var QN = require('qn');
 var Moment = require('moment');
 var Q = require('q');
 var fs = require('fs')
-var util = require('util')
 var crypto = require('crypto')
 var minimatch = require('minimatch')
 var uploadedFiles = 0;
 
 module.exports = function (qiniu, option) {
   option = option || {};
-  option = extend({dir: '', versioning: false, versionFile: null, ignore:['*.html']}, option);
+  option = extend({dir: '', versioning: false, versionFile: null, ignore: ['*.html'], concurrent: 10}, option);
 
   var qn = QN.create(qiniu)
     , version = Moment().format('YYMMDDHHmm')
-    , qs = [];
+    , qs = []
+    , filesIndex = 0
 
   return through2.obj(function (file, enc, next) {
     var that = this;
@@ -26,47 +26,63 @@ module.exports = function (qiniu, option) {
     var filePath = path.relative(file.base, file.path);
 
     if (file._contents === null) return next();
-    option.ignore.forEach(function(item) {
+    option.ignore.forEach(function (item) {
       if (minimatch(filePath, item)) isIgnore = true;
     })
     if (isIgnore) return next();
 
+    filesIndex++
+
     var fileKey = option.dir + ((!option.dir || option.dir[option.dir.length - 1]) === '/' ? '' : '/') + (option.versioning ? version + '/' : '') + filePath;
     var fileHash = calcHash(file);
+    var retries = 0;
+    var isConcurrent = filesIndex % Math.floor(option.concurrent) !== 0
 
-    qs.push(Q.nbind(qn.stat, qn)(fileKey)
-      .spread(function (stat) {
-        // Skip when hash equal
-        if (stat.hash === fileHash) return false;
+    var handler = function () {
+      log('Start:', colors.green(filePath), '→', colors.green(fileKey));
+      return Q.nbind(qn.stat, qn)(fileKey)
+        .spread(function (stat) {
+          // Skip when hash equal
+          if (stat.hash === fileHash) return false;
 
-        // Then delete
-        return Q.nbind(qn.delete, qn)(fileKey)
-      }, function () {
-        // Upload when not exists
-        return true;
-      })
-      .then(function (isUpload) {
-        if (isUpload === false) return false;
-        return Q.nbind(qn.upload, qn)(file._contents, {key: fileKey})
-      })
-      .then(function (stat) {
-        // No upload
-        if (stat === false) {
-          log('Skip:', colors.grey(filePath));
-          return;
-        }
+          // Then delete
+          return Q.nbind(qn.delete, qn)(fileKey)
+        }, function () {
+          // Upload when not exists
+          return true;
+        })
+        .then(function (isUpload) {
+          if (isUpload === false) return false;
+          return Q.nbind(qn.upload, qn)(file._contents, {key: fileKey})
+        })
+        .then(function (stat) {
+          // No upload
+          if (stat === false) {
+            log('Skip:', colors.grey(filePath));
+            return;
+          }
 
-        // Record hash
-        uploadedFiles++;
+          // Record hash
+          uploadedFiles++;
 
-        log('Upload:', colors.green(filePath), '→', colors.green(fileKey));
-      }, function (err) {
-        log('Error', colors.red(filePath), new PluginError('gulp-qiniu', err).message);
-        that.emit('Error', colors.red(filePath), new PluginError('gulp-qiniu', err));
-      })
-    )
+          log('Upload:', colors.green(filePath), '→', colors.green(fileKey));
+          !isConcurrent && next()
+        }, function (err) {
+          log('Error', colors.red(filePath), new PluginError('gulp-qiniu', err).message);
+          that.emit('Error', colors.red(filePath), new PluginError('gulp-qiniu', err));
 
-    next();
+          if (retries++ < 3) {
+            log('Retry ->', retries, colors.red(filePath));
+            return handler()
+          } else {
+            !isConcurrent && next()
+          }
+        })
+    }
+
+    qs.push(handler())
+
+    isConcurrent && next()
   }, function () {
     Q.all(qs)
       .then(function (rets) {
