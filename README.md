@@ -22,7 +22,8 @@ gulp.src('./public/**')
   }, {
     dir: 'assets/',
     versioning: true,
-    versionFile: './cdn.json'
+    versionFile: './cdn.json',
+    concurrent: 10
   }))
 ```
 
