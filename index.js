@@ -39,7 +39,7 @@ module.exports = function (qiniu, option) {
     var isConcurrent = filesIndex % Math.floor(option.concurrent) !== 0
 
     var handler = function () {
-      log('Start:', colors.green(filePath), '→', colors.green(fileKey));
+      log('Start →', fileKey);
       return Q.nbind(qn.stat, qn)(fileKey)
         .spread(function (stat) {
           // Skip when hash equal
@@ -58,21 +58,21 @@ module.exports = function (qiniu, option) {
         .then(function (stat) {
           // No upload
           if (stat === false) {
-            log('Skip:', colors.grey(filePath));
+            log('Skip →', colors.grey(fileKey));
             return;
           }
 
           // Record hash
           uploadedFiles++;
 
-          log('Upload:', colors.green(filePath), '→', colors.green(fileKey));
+          log('Upload →', colors.green(fileKey));
           !isConcurrent && next()
         }, function (err) {
-          log('Error', colors.red(filePath), new PluginError('gulp-qiniu', err).message);
-          that.emit('Error', colors.red(filePath), new PluginError('gulp-qiniu', err));
+          log('Error →', colors.red(fileKey), new PluginError('gulp-qiniu', err).message);
+          that.emit('Error', colors.red(fileKey), new PluginError('gulp-qiniu', err));
 
           if (retries++ < 3) {
-            log('Retry ->', retries, colors.red(filePath));
+            log('Retry('+retries+') →', colors.red(fileKey));
             return handler()
           } else {
             !isConcurrent && next()
@@ -86,18 +86,18 @@ module.exports = function (qiniu, option) {
   }, function () {
     Q.all(qs)
       .then(function (rets) {
-        log('Total:', colors.green(uploadedFiles + '/' + rets.length));
+        log('Total →', colors.green(uploadedFiles + '/' + rets.length));
 
         // Check if versioning
         if (!option.versioning) return;
-        log('Version:', colors.green(version));
+        log('Version →', colors.green(version));
 
         if (option.versionFile) {
           fs.writeFileSync(option.versionFile, JSON.stringify({version: version}))
-          log('Write version file:', colors.green(option.versionFile));
+          log('Write version file →', colors.green(option.versionFile));
         }
       }, function (err) {
-        log('Failed upload files:', err.message);
+        log('Failed upload →', err.message);
       });
   });
 
