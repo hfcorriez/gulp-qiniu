@@ -67,6 +67,7 @@ module.exports = function (qiniu, option) {
           // No upload
           if (stat === false) {
             log('Skip →', colors.grey(fileKey));
+            !isConcurrent && next()
             return;
           }
 
