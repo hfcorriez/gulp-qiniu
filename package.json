@@ -1,6 +1,6 @@
 {
   "name": "gulp-qiniu",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Gulp task for deploying files to qiniu CDN",
   "author": "hfcorriez <hfcorriez@gmail.com>",
   "licenses": [
