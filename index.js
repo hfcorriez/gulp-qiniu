@@ -75,7 +75,7 @@ module.exports = function (qiniu, option) {
           // Record hash
           uploadedFiles++;
 
-          log('Upload →', colors.green(qiniu.origin + '/' + fileKey));
+          log('Upload →', colors.green(fileKey));
           !isConcurrent && next()
         }, function (err) {
           log('Error →', colors.red(fileKey), new PluginError('gulp-qiniu', err).message);
