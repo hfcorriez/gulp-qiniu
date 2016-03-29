@@ -25,6 +25,7 @@ module.exports = function (qiniu, option) {
     var that = this;
     var isIgnore = false;
     var filePath = path.relative(file.base, file.path);
+    filePath = filePath.split(path.sep).join('/');
 
     if (file._contents === null) return next();
     option.ignore.forEach(function (item) {
