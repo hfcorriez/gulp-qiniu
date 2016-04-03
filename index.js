@@ -25,6 +25,7 @@ module.exports = function (qiniu, option) {
     var that = this;
     var isIgnore = false;
     var filePath = path.relative(file.base, file.path);
+    filePath = filePath.split(path.sep).join('/');
 
     if (file._contents === null) return next();
     option.ignore.forEach(function (item) {
@@ -74,7 +75,7 @@ module.exports = function (qiniu, option) {
           // Record hash
           uploadedFiles++;
 
-          log('Upload →', colors.green(qiniu.origin + '/' + fileKey));
+          log('Upload →', colors.green((qiniu.origin ? qiniu.origin  + '/' : '') + fileKey));
           !isConcurrent && next()
         }, function (err) {
           log('Error →', colors.red(fileKey), new PluginError('gulp-qiniu', err).message);
