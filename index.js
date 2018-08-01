@@ -14,7 +14,7 @@ var getEtag = require('./qetag')
 
 module.exports = function (qiniu, option) {
   option = option || {};
-  option = extend({dir: '', versioning: false, versionFile: null, ignore: ['*.html'], concurrent: 10}, option);
+  option = extend({dir: '', versioning: false, versionFile: null, ignore: [], concurrent: 10}, option);
 
   var qn = QN.create(qiniu)
     , version = Moment().format('YYMMDDHHmm')
